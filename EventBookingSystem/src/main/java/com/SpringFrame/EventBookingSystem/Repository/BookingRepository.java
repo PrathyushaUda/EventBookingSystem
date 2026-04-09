@@ -10,14 +10,17 @@ import com.SpringFrame.EventBookingSystem.model.Booking;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
-	//Counts how many bookings each event has
-	 @Query("SELECT b.event.title, COUNT(b) FROM Booking b GROUP BY b.event.title")
-	    List<Object[]> getBookingCountByEvent();
-	    
-	    @Query("SELECT b.event.title, SUM(b.totalAmount) FROM Booking b GROUP BY b.event.title")
-	    List<Object[]> getRevenueByEvent();
-	    
-	    @Query("SELECT b.user.name, COUNT(b) FROM Booking b GROUP BY b.user.name")
-	    List<Object[]> getBookingsByUser();
+	List<Booking> findByUserId(Long userId);
+
+	List<Booking> findByEventId(Long eventId);
+
+	@Query("SELECT b.event.title, COUNT(b) FROM Booking b GROUP BY b.event.title")
+	List<Object[]> getBookingCountByEvent();
+
+	@Query("SELECT b.event.title, SUM(b.totalAmount) FROM Booking b GROUP BY b.event.title")
+	List<Object[]> getRevenueByEvent();
+
+	@Query("SELECT b.user.name, COUNT(b) FROM Booking b GROUP BY b.user.name")
+	List<Object[]> getBookingsByUser();
 
 }
