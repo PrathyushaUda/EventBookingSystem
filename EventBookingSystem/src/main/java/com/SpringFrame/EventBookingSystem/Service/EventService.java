@@ -9,6 +9,7 @@ import com.SpringFrame.EventBookingSystem.model.Event;
 @Service
 public interface EventService {
 	List<Event> getAllEvents();
+	List<String> getSoldOutEvents();
 
 	Event getEventById(Long id);
 

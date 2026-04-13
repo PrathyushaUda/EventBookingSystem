@@ -37,4 +37,10 @@ public class EventServiceImpl implements EventService {
 
 	}
 
+	@Override
+	public List<String> getSoldOutEvents() {
+		
+		return eventRepository.getSoldOutEvents();
+	}
+
 }

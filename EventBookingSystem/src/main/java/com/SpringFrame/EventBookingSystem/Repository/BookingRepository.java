@@ -14,6 +14,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
 	List<Booking> findByEventId(Long eventId);
 
+	
+	@Query("SELECT b.event.title, COUNT(b) as total FROM Booking b GROUP BY b.event.title ORDER BY total DESC")
+	List<Object[]> getTopSellingEvent();
+	
 	@Query("SELECT b.event.title, COUNT(b) FROM Booking b GROUP BY b.event.title")
 	List<Object[]> getBookingCountByEvent();
 

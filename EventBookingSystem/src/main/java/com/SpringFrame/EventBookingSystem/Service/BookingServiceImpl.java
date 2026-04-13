@@ -86,4 +86,10 @@ public class BookingServiceImpl implements BookingService {
 		return bookingRepository.getBookingsByUser();
 	}
 
+	@Override
+	public List<Object[]> getTopSellingEvent() {
+		
+		return bookingRepository.getTopSellingEvent();
+	}
+
 }

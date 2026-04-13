@@ -14,6 +14,8 @@ public interface BookingService {
 	    List<Object[]> getBookingCountByEvent();
 
 	    List<Object[]> getRevenueByEvent();
+	    
+	   List<Object[]> getTopSellingEvent();
 
 	    List<Object[]> getBookingsByUserReport();
 }

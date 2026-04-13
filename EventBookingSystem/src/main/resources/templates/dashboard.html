@@ -1,22 +1,32 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Dashboard</title>
+    <title>Admin Dashboard</title>
 
-    <!-- ✅ Bootstrap -->
+    <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- ✅ Icons -->
+    <!-- Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 </head>
 
 <body class="bg-light">
 
+<!-- 🔐 ROLE CHECK (UI LEVEL) -->
+<div th:if="${session.user.role == 'ADMIN'}">
+
 <!-- 🔹 NAVBAR -->
 <nav class="navbar navbar-dark bg-dark shadow">
     <div class="container">
-        <span class="navbar-brand fw-bold">Dashboard</span>
-        <a href="/events" class="btn btn-outline-light">Back to Events</a>
+        <span class="navbar-brand fw-bold">Admin Dashboard</span>
+
+        <div>
+            <a href="/add-event" class="btn btn-outline-light me-2">Add Event</a>
+            
+            <a href="/events" class="btn btn-outline-light me-2">Events</a>
+            <a href="/my-bookings?userId=1" class="btn btn-outline-light me-2"> All Bookings</a>
+            <a href="/logout" class="btn btn-danger">Logout</a>
+        </div>
     </div>
 </nav>
 
@@ -28,7 +38,7 @@
 
         <!-- 🔹 Booking Count -->
         <div class="col-md-6">
-            <div class="card shadow border-0 rounded-4">
+            <div class="card shadow border-0 rounded-4 h-100">
                 <div class="card-header bg-primary text-white fw-bold">
                     <i class="bi bi-bar-chart"></i> Booking Count per Event
                 </div>
@@ -49,13 +59,18 @@
                         </tbody>
                     </table>
 
+                    <p class="text-center text-muted"
+                       th:if="${#lists.isEmpty(bookingCount)}">
+                        No booking data available
+                    </p>
+
                 </div>
             </div>
         </div>
 
         <!-- 🔹 Revenue -->
         <div class="col-md-6">
-            <div class="card shadow border-0 rounded-4">
+            <div class="card shadow border-0 rounded-4 h-100">
                 <div class="card-header bg-success text-white fw-bold">
                     <i class="bi bi-currency-rupee"></i> Revenue per Event
                 </div>
@@ -76,12 +91,72 @@
                         </tbody>
                     </table>
 
+                    <p class="text-center text-muted"
+                       th:if="${#lists.isEmpty(revenue)}">
+                        No revenue data available
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔥 Top Selling Event -->
+        <div class="col-md-6">
+            <div class="card shadow border-0 rounded-4 h-100">
+                <div class="card-header bg-warning text-dark fw-bold">
+                    <i class="bi bi-star-fill"></i> Top Selling Event
+                </div>
+                <div class="card-body text-center">
+
+                    <h4 th:if="${topEvent != null}">
+                        <span th:text="${topEvent[0][0]}"></span>
+                    </h4>
+                    <p class="text-muted" th:if="${topEvent != null}">
+                        (<span th:text="${topEvent[0][1]}"></span> bookings)
+                    </p>
+
+                    <p class="text-muted" th:if="${topEvent == null}">
+                        No data available
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔥 Sold Out Events -->
+        <div class="col-md-6">
+            <div class="card shadow border-0 rounded-4 h-100">
+                <div class="card-header bg-danger text-white fw-bold">
+                    <i class="bi bi-x-circle"></i> Sold Out Events
+                </div>
+                <div class="card-body">
+
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"
+                            th:each="e : ${soldOutEvents}"
+                            th:text="${e}">
+                        </li>
+                    </ul>
+
+                    <p class="text-muted text-center mt-3"
+                       th:if="${#lists.isEmpty(soldOutEvents)}">
+                        No sold out events
+                    </p>
+
                 </div>
             </div>
         </div>
 
     </div>
 
+</div>
+
+</div>
+
+<!-- ❌ If USER tries to access -->
+<div th:if="${session.user.role != 'ADMIN'}" class="text-center mt-5">
+    <h3 class="text-danger">Access Denied</h3>
+    <a href="/events" class="btn btn-primary mt-3">Go to Events</a>
 </div>
 
 </body>

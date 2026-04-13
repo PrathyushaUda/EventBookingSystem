@@ -11,12 +11,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.SpringFrame.EventBookingSystem.Service.UserService;
 import com.SpringFrame.EventBookingSystem.model.User;
 
+import jakarta.servlet.http.HttpSession;
+
 
 
 @Controller
 public class AuthenticationController {
 	@Autowired
 	private UserService userService;
+	@GetMapping("/index")
+		public String home() {
+			return "index";
+		}
+	
 
 	@GetMapping("/login")
 	public String showLogin() {
@@ -24,19 +31,34 @@ public class AuthenticationController {
 	}
 
 	@PostMapping("/login")
-	public String login(@RequestParam String email, @RequestParam String password, Model model) {
-		User user = userService.findByEmail(email);
-		if (user != null && user.getPassword().equals(password)) {
-			if(user.getRole().equals("ADMIN")) {
-				return "redirect:/add-event";
-			}
-			return "redirect:/events";
-		}
+	public String login(@RequestParam String email,
+	                    @RequestParam String password,
+	                    Model model,
+	                    HttpSession session) {
 
-		model.addAttribute("error", "Invalid credentials");
-		return "login";
+	    User user = userService.findByEmail(email);
+
+	    if (user != null && user.getPassword().equals(password)) {
+
+	        // ✅ VERY IMPORTANT
+	        session.setAttribute("user", user);
+
+	        if (user.getRole().equals("ADMIN")) {
+	            return "redirect:/dashboard";
+	        }
+	        return "redirect:/events";
+	    }
+
+	    model.addAttribute("error", "Invalid credentials");
+	    return "login";
 	}
-	
+	@GetMapping("/logout")
+	public String logout(HttpSession session) {
+
+	    session.invalidate(); // 🔥 destroy session
+
+	    return "redirect:/login";
+	}
 	@GetMapping("/register")
 	public String showRegister(Model model) {
 		model.addAttribute("user",new User());
@@ -51,5 +73,6 @@ public class AuthenticationController {
 	        } catch (Exception e) {
 		return "register";
 	}
+		 
 }
 }
