@@ -23,39 +23,68 @@ public class BookingServiceImpl implements BookingService {
 
 	@Autowired
 	private UserRepository userRepository;
+	  @Autowired
+	    private EmailService emailService;
 
 	@Override
 	public Booking bookTickets(Long eventId, Long userId, int tickets) {
 
-		Event event = eventRepository.findById(eventId).orElseThrow(() -> new RuntimeException("Event not found"));
+		  Event event = eventRepository.findById(eventId)
+	                .orElseThrow(() -> new RuntimeException("Event not found"));
 
-		User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-		if (tickets <= 0) {
-			throw new RuntimeException("Invalid ticket count");
-		}
+	        User user = userRepository.findById(userId)
+	                .orElseThrow(() -> new RuntimeException("User not found"));
 
-		if (event.getAvailableSeats() < tickets) {
-			throw new RuntimeException("Not enough seats available");
-		}
+	        if (tickets <= 0) {
+	            throw new RuntimeException("Invalid ticket count");
+	        }
 
-		if (event.getDate().isBefore(LocalDate.now())) {
-			throw new RuntimeException("Event already completed");
-		}
+	        if (event.getAvailableSeats() < tickets) {
+	            throw new RuntimeException("Not enough seats available");
+	        }
 
-		event.setAvailableSeats(event.getAvailableSeats() - tickets);
-		eventRepository.save(event);
+	        if (event.getDate().isBefore(LocalDate.now())) {
+	            throw new RuntimeException("Event already completed");
+	        }
 
-		Booking booking = new Booking();
-		booking.setEvent(event);
-		booking.setUser(user);
-		booking.setNumberOfTickets(tickets);
-		booking.setTotalAmount(event.getPrice() * tickets);
-		booking.setBookingDate(LocalDate.now());
-		booking.setStatus("CONFIRMED");
+	        // update seats
+	        event.setAvailableSeats(event.getAvailableSeats() - tickets);
+	        eventRepository.save(event);
 
-		return bookingRepository.save(booking);
-	}
+	        // create booking
+	        Booking booking = new Booking();
+	        booking.setEvent(event);
+	        booking.setUser(user);
+	        booking.setNumberOfTickets(tickets);
+	        booking.setTotalAmount(event.getPrice() * tickets);
+	        booking.setBookingDate(LocalDate.now());
+	        booking.setStatus("CONFIRMED");
 
+	        Booking savedBooking = bookingRepository.save(booking);
+
+	        // ✅ EMAIL AFTER SUCCESSFUL BOOKING
+	        sendBookingEmail(savedBooking);
+
+	        return savedBooking;
+	    }
+
+	    // 🔥 BEST PRACTICE: keep email separate method
+	    private void sendBookingEmail(Booking booking) {
+	        try {
+	            emailService.sendBookingConfirmation(
+	                    booking.getUser().getEmail(),
+	                    booking.getUser().getName(),
+	                    booking.getEvent().getTitle(),
+	                    booking.getNumberOfTickets(),
+	                    booking.getTotalAmount()
+	            );
+
+	            System.out.println("✅ Booking email sent");
+
+	        } catch (Exception e) {
+	            System.out.println("⚠ Email failed but booking successful: " + e.getMessage());
+	        }
+	    }
 	@Override
 	public List<Booking> getBookingsByUser(Long userId) {
 
@@ -90,6 +119,12 @@ public class BookingServiceImpl implements BookingService {
 	public List<Object[]> getTopSellingEvent() {
 		
 		return bookingRepository.getTopSellingEvent();
+	}
+
+	@Override
+	public List<Booking> getAllBookings() {
+		
+		return bookingRepository.findAll();
 	}
 
 }

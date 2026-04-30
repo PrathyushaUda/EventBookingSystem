@@ -8,28 +8,52 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.SpringFrame.EventBookingSystem.Service.BookingService;
+import com.SpringFrame.EventBookingSystem.Service.EmailService;
+import com.SpringFrame.EventBookingSystem.model.User;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class BookingController {
 	@Autowired
 	private BookingService bookingService;
-
+	@Autowired
+	private EmailService emailService;
 	@PostMapping("/book")
-	public String bookTickets(@RequestParam Long eventId, @RequestParam Long userId, @RequestParam int tickets,
-			Model model) {
-		try {
-			bookingService.bookTickets(eventId, userId, tickets);
-			return "redirect:/events";
-		} catch (Exception e) {
-			model.addAttribute("error", e.getMessage());
-			return "error";
-		}
-	}
+	public String bookTickets(@RequestParam Long eventId,
+	                          @RequestParam int tickets,
+	                          HttpSession session,
+	                          Model model) {
 
-// 🔹 My bookings
+	    try {
+	        User user = (User) session.getAttribute("user");
+
+	        bookingService.bookTickets(eventId, user.getId(), tickets);
+
+	        return "redirect:/events";
+
+	    } catch (Exception e) {
+	        model.addAttribute("error", e.getMessage());
+	        return "error";
+	    }
+	
+}
+
+// 🔹 My bookings page
 	@GetMapping("/my-bookings")
-	public String myBookings(@RequestParam Long userId, Model model) {
-		model.addAttribute("bookings", bookingService.getBookingsByUser(userId));
-		return "my-bookings";
+	public String myBookings(HttpSession session, Model model) {
+
+	    User user = (User) session.getAttribute("user");
+
+	    if (user == null) {
+	        return "redirect:/login";
+	    }
+
+	    model.addAttribute("bookings",
+	        bookingService.getBookingsByUser(user.getId())
+	    );
+
+	    return "my-bookings";
 	}
+	
 }

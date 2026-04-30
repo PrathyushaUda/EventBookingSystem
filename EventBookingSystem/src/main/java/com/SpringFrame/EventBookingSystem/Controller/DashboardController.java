@@ -46,11 +46,26 @@ public class DashboardController {
 
         model.addAttribute("soldOutEvents",
                 eventService.getSoldOutEvents());
+        model.addAttribute("allBookings",
+                bookingService.getAllBookings());
 
         model.addAttribute("userBookings",
                 bookingService.getBookingsByUserReport());
 
         return "dashboard";
+    }
+    @GetMapping("/all-bookings")
+    public String allBookings(Model model, HttpSession session) {
+
+        User user = (User) session.getAttribute("user");
+
+        if (user == null || !user.getRole().equals("ADMIN")) {
+            return "redirect:/login";
+        }
+
+        model.addAttribute("bookings", bookingService.getAllBookings());
+
+        return "all-bookings";
     }
    
 }

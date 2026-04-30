@@ -3,76 +3,121 @@ package com.SpringFrame.EventBookingSystem.Controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
+import com.SpringFrame.EventBookingSystem.Service.OtpService;
 import com.SpringFrame.EventBookingSystem.Service.UserService;
 import com.SpringFrame.EventBookingSystem.model.User;
 
 import jakarta.servlet.http.HttpSession;
 
-
-
 @Controller
 public class AuthenticationController {
-	@Autowired
-	private UserService userService;
-	@GetMapping("/index")
-		public String home() {
-			return "index";
-		}
-	
 
-	@GetMapping("/login")
-	public String showLogin() {
-		return "login";
-	}
+    @Autowired
+    private OtpService otpService;
 
-	@PostMapping("/login")
-	public String login(@RequestParam String email,
-	                    @RequestParam String password,
-	                    Model model,
-	                    HttpSession session) {
+    @Autowired
+    private UserService userService;
 
-	    User user = userService.findByEmail(email);
+    // 🔹 Home
+    @GetMapping("/index")
+    public String home() {
+        return "index";
+    }
 
-	    if (user != null && user.getPassword().equals(password)) {
+    // 🔹 Login Page
+    @GetMapping("/login")
+    public String showLogin() {
+        return "login";
+    }
 
-	        // ✅ VERY IMPORTANT
-	        session.setAttribute("user", user);
+    // 🔹 Normal Login (Email + Password)
+    @PostMapping("/login")
+    public String login(@RequestParam String email,
+                        @RequestParam String password,
+                        Model model,
+                        HttpSession session) {
 
-	        if (user.getRole().equals("ADMIN")) {
-	            return "redirect:/dashboard";
-	        }
-	        return "redirect:/events";
-	    }
+        User user = userService.findByEmail(email);
 
-	    model.addAttribute("error", "Invalid credentials");
-	    return "login";
-	}
-	@GetMapping("/logout")
-	public String logout(HttpSession session) {
+        if (user != null && user.getPassword().equals(password)) {
 
-	    session.invalidate(); // 🔥 destroy session
+            session.setAttribute("user", user);
 
-	    return "redirect:/login";
-	}
-	@GetMapping("/register")
-	public String showRegister(Model model) {
-		model.addAttribute("user",new User());
-		return "register";
-	}
-	
-	@PostMapping("/register")
-	public String register(@ModelAttribute User user, Model model){
-		 try {
-	            userService.registerUser(user);
-	            return "redirect:/login";
-	        } catch (Exception e) {
-		return "register";
-	}
-		 
-}
+            if (user.getRole().equals("ADMIN")) {
+                return "redirect:/dashboard";
+            }
+            return "redirect:/events";
+        }
+
+        model.addAttribute("error", "Invalid credentials");
+        return "login";
+    }
+
+    // 🔥 SEND EMAIL OTP
+    @PostMapping("/send-email-otp")
+    public String sendEmailOtp(@RequestParam String email, Model model) {
+
+
+        otpService.sendEmailOtp(email);
+
+        model.addAttribute("message", "OTP sent to your email!");
+        model.addAttribute("email", email); // 🔥 REQUIRED
+
+        return "login";
+    }
+
+    // 🔥 VERIFY EMAIL OTP
+    @PostMapping("/verify-email-otp")
+    public String verifyEmailOtp(@RequestParam String email,
+                                @RequestParam String otp,
+                                HttpSession session,
+                                Model model) {
+
+        boolean isValid = otpService.validateOtp(email, otp);
+
+        if (!isValid) {
+            model.addAttribute("error", "Invalid OTP");
+            return "login";
+        }
+
+        User user = userService.findByEmail(email);
+
+        if (user == null) {
+            model.addAttribute("error", "User not found");
+            return "login";
+        }
+
+        // ✅ Login success
+        session.setAttribute("user", user);
+
+        return "redirect:/events";
+    }
+
+    // 🔹 Logout
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate();
+        return "redirect:/login";
+    }
+
+    // 🔹 Register Page
+    @GetMapping("/register")
+    public String showRegister(Model model) {
+        model.addAttribute("user", new User());
+        return "register";
+    }
+
+    // 🔹 Register User
+    @PostMapping("/register")
+    public String register(@ModelAttribute User user, Model model) {
+        try {
+            userService.registerUser(user);
+            return "redirect:/login";
+        } catch (Exception e) {
+            model.addAttribute("error", "Registration failed");
+            return "register";
+        }
+    }
 }

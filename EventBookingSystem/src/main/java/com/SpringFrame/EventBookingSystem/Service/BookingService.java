@@ -10,6 +10,7 @@ public interface BookingService {
 	    List<Booking> getBookingsByUser(Long userId);
 
 	    List<Booking> getBookingsByEvent(Long eventId);
+	    List<Booking> getAllBookings();
 
 	    List<Object[]> getBookingCountByEvent();
 
@@ -18,4 +19,5 @@ public interface BookingService {
 	   List<Object[]> getTopSellingEvent();
 
 	    List<Object[]> getBookingsByUserReport();
+	    
 }
